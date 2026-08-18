@@ -371,3 +371,44 @@ html.diff-unsync .diff-col {
   overflow-y: auto;
   padding-right: 0.5rem;
 }
+
+/* ── Off-screen worksheet blocks are not laid out until scrolled near ───────
+ *
+ * A maths-heavy worksheet is almost entirely KaTeX: singular-learning-theory
+ * renders 1,909 formulas into ~95,000 DOM nodes, 96% of the page. Laying all
+ * of that out costs ~1.1s on a mid-range laptop before anything appears, which
+ * is what makes the big worksheets feel slow to open on other people's
+ * machines (they are fine on a fast desktop, which is why this went unnoticed).
+ *
+ * `content-visibility: auto` lets the browser skip layout and paint for a block
+ * until it scrolls near the viewport — so only the ~1.5 screens actually being
+ * read get laid out. Measured on the live SLT page at 4x CPU throttle: layout
+ * 1146ms -> 65ms, first paint 1804ms -> 580ms, load 3486ms -> 1335ms.
+ *
+ * `contain-intrinsic-size: auto <n>px` is the placeholder height used before a
+ * block has ever been rendered; `auto` makes the browser remember each block's
+ * real size once seen, so the scrollbar settles instead of jumping. The
+ * document's total height measured identical to baseline.
+ *
+ * Deliberately scoped to DIRECT children of .prose: each is a paragraph,
+ * heading or display equation — a sensible unit to skip. Applying it deeper
+ * (to individual .katex spans) would fragment inline text mid-line, and
+ * applying it to .prose itself would skip the entire worksheet at once.
+ *
+ * Not a visibility mechanism: skipped blocks stay in the accessibility tree,
+ * stay findable with ctrl-F, and remain valid anchor targets — deep-linking to
+ * the last heading of SLT lands at the same scroll offset as without the rule.
+ */
+.prose > * {
+  content-visibility: auto;
+  contain-intrinsic-size: auto 120px;
+}
+
+/* Printing must not depend on what was scrolled past: force every block to lay
+ * out so a print/PDF export contains the whole worksheet, not just the parts
+ * that happened to be visited. */
+@media print {
+  .prose > * {
+    content-visibility: visible;
+  }
+}
