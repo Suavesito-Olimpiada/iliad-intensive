@@ -114,8 +114,12 @@ For more background, see \href{https://www.lesswrong.com/posts/HSDumToH57nSRdLST
 \textbf{Symbols used throughout.}
 \begin{itemize}\itemsep=2pt
   \item $\mathbb{B} = \{\texttt{0}, \texttt{1}\}$: the binary alphabet; $\mathbb{B}^*$ all finite binary strings; $\mathbb{B}^n$ length-$n$ strings.
-  \item $\epsilon$: the empty string. $x_{1:n} := x_1 x_2 \cdots x_n$; $x_{<t} := x_1 x_2 \cdots x_{t-1}$.
-  \item $X_{1:n}, X_{<t}$: the corresponding random variables.
+  \item $\epsilon$: the empty string. 
+  \item $xy$: string concatenation. if $x := x_{1:n}$ and $y := y_{1:m}$ then
+  $xy = x_1 \ldots x_n y_1 \ldots y_m$. 
+  \item $x_{i:j} := x_i x_{i+1} \ldots x_j$.
+  \item $x_{<t} := x_1 x_2 \cdots x_{t-1}$.
+  %\item $X_{1:n}, X_{<t}$: the corresponding random variables.
   \item $\nu, \rho$: generic environments / predictors. $\mu$: the true (unknown) environment generating the data. $\xi$: a Bayesian mixture of environments.
   \item $\Mc = \{\nu_1, \nu_2, \ldots\}$: a countable class of candidate environments.
   \item $w_\nu > 0$ with $\sum_{\nu \in \Mc} w_\nu = 1$: the prior over $\Mc$. $w(\nu \mid x_{<t})$: the posterior after observing $x_{<t}$.
@@ -127,12 +131,17 @@ For more background, see \href{https://www.lesswrong.com/posts/HSDumToH57nSRdLST
 \section{The mixture is a predictor}\label{prob:one_step}
 
 \begin{definition}[Environment]\label{def:environment}
-An \textbf{environment} $\nu$ assigns to each history $x_{<t} \in \mathbb{B}^*$ a predictive distribution $\nu(\cdot \mid x_{<t}) \in \Delta \mathbb{B}$ over the next symbol. The joint probability of a string is defined by the chain rule
+An \textbf{environment} $\nu$ assigns to each history $x_{<t} \in \mathbb{B}^*$ a predictive distribution $\nu(\cdot \mid x_{<t}) \in \Delta \mathbb{B}$ over the next symbol. The conditional joint probability of a string $x \in \mathbb{B}^*$, conditioned on $y \in \mathbb{B}^*$, is defined as
 \[
-\nu(x_{1:n}) ~:=~ \prod_{t=1}^{n} \nu(x_t \mid x_{<t}), \qquad \nu(\epsilon) := 1,
+\nu(x_{1:n} | y) ~:=~ \prod_{t=1}^{n} \nu(x_t \mid y x_{<t}), \qquad \nu(\epsilon) := 1.
 \]
-so that $\nu(x_{1:t}) = \nu(x_{<t}) \cdot \nu(x_t \mid x_{<t})$ and $\nu(x) = \nu(x\texttt{0}) + \nu(x\texttt{1})$ for all $x \in \mathbb{B}^*$. The true (unknown) environment generating the data is denoted $\mu$.
+The unconditional joint is defined as $\nu(x_{1:n}) := \nu(x_{1:n} \mid \epsilon)$.
+The true (unknown) environment generating the data is denoted $\mu$.
 \end{definition}
+
+\begin{remark}
+One can show that $\nu(x_{1:t}) = \nu(x_{<t}) \cdot \nu(x_t \mid x_{<t})$ and $\nu(x) = \nu(x\texttt{0}) + \nu(x\texttt{1})$ for all $x \in \mathbb{B}^*$. 
+\end{remark}
 
 \begin{definition}[Bayesian mixture $\xi$]\label{def:mixture}
 Let $\Mc = \{\nu_1, \nu_2, \dots\}$ be a countable class of environments with prior weights $w_\nu > 0$ satisfying $\sum_{\nu \in \Mc} w_\nu = 1$. The \textbf{Bayesian mixture} is defined as a prior-weighted mixture over all environments $\nu$ in $\Mc$:
