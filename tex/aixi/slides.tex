@@ -5,11 +5,11 @@
 %
 % Build: pdflatex -> bibtex -> pdflatex -> pdflatex (bibtex needed for the
 %        References frame; CI's latexmk runs this automatically).
-%        pdflatex -interaction=nonstopmode -halt-on-error si_and_aixi_slides.tex
+%        pdflatex -interaction=nonstopmode -halt-on-error slides.tex
 %
 % Pause behaviour: the default build keeps the \pause reveals (presentation).
 % Define \HANDOUT to collapse them into a static handout, e.g.
-%   pdflatex "\def\HANDOUT{}\input{si_and_aixi_slides}"
+%   pdflatex "\def\HANDOUT{}\input{slides}"
 %   latexmk  ... -usepretex=\def\HANDOUT{}        (used by CI)
 
 \ifdefined\HANDOUT\PassOptionsToClass{handout}{beamer}\fi
@@ -43,7 +43,7 @@
 %===============================================================================
 \begin{document}
 
-\title[AIXI: a speedrun]{Universal AI: AIXI}
+\title[AIXI: a speedrun]{[D.3.2] Universal AI: AIXI}
 \author[David Quarel]{David Quarel}
 \institute[Iliad Intensive]{Iliad Intensive}
 \date{June 2026}
