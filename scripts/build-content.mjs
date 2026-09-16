@@ -257,6 +257,30 @@ const QUIET = args.includes("--quiet");
 // excluded by extension (fig/ is all source, including its .pdf figures, and is
 // hashed whole). Anything not listed here counts as an input by default.
 const ARTIFACT_EXT = /\.(pdf|aux|log|out|toc|nav|snm|bbl|blg|fls|fdb_latexmk|synctex\.gz)$/i;
+// Overfull \hbox reports in a worksheet's main.log, attributed to source
+// file:line. TeX names only the line; the file comes from the log's
+// parenthesised open/close trail, walked with a stack after re-joining the
+// log at its 79-column wraps. Every "(" pushes (most are files, some are
+// prose — they balance) and every ")" pops; the report names the innermost
+// .tex on the stack, with an autolabel copy mapped back to its source. Both
+// TeX phrasings are caught: "detected at line N" (a display, a box) and
+// "in paragraph at lines A--B" (running text, reported at A).
+function overfullBoxes(logPath) {
+  const raw = readFileSync(logPath, "latin1");
+  const text = raw.split("\n").reduce((acc, l) => acc + l + (l.length === 79 ? "" : "\n"), "");
+  const stack = [];
+  const out = [];
+  const re = /Overfull \\hbox \(([\d.]+)pt too wide\) (?:in paragraph|detected) at lines? (\d+)|\(([^\s()]*)|(\))/g;
+  for (let m; (m = re.exec(text)); ) {
+    if (m[1]) {
+      const file = [...stack].reverse().find((f) => /\.tex$/.test(f)) ?? "main.tex";
+      out.push({ file: file.replace(/^\.\//, "").replace(/\.autolabel\.tex$/, ".tex"), line: Number(m[2]), pt: Number(m[1]) });
+    } else if (m[4]) stack.pop();
+    else stack.push(m[3]);
+  }
+  return out;
+}
+
 const ARTIFACT_NAME = new Set(["main.autolabel.tex", "main-nosol.tex", "main-nosol.mdx", ".build-hash"]);
 
 // The decks a worksheet folder ships. `slides.tex` is the deck every folder has
@@ -535,6 +559,13 @@ async function buildSlug(slug) {
           : "pdflatex failed";
         return done(false, `PDF build failed: ${errLine.trim()} (see ${path.relative(ROOT, log)})`);
       }
+      // A line TeX could not fit — a display equation, an unbreakable word —
+      // hangs past the text width in the PDF, and the web column is no wider,
+      // so it escapes there too. Non-fatal, but named by file:line: the fix is
+      // to break the line in the source, not to let it scroll.
+      for (const b of overfullBoxes(path.join(dir, "main.log")))
+        notes.push(`⚠ warning: tex/${slug}/${b.file}:${b.line}  overfull line, ${b.pt.toFixed(1)}pt past the text width — ` +
+          "break the equation (or the word) so it fits the page; it overflows the web column too");
       // no-solutions PDF: compile a solution-stripped copy of the source.
       // Stripping (rather than \solutionsfalse) works for both dialects and
       // doubles as the spoiler-free .tex download.
