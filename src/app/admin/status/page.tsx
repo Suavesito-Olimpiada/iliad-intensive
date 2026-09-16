@@ -3,7 +3,7 @@ import Link from "next/link";
 import { readStatus, type Day, type Deck, type SourceKind } from "@/lib/status";
 import { listClusters } from "@/lib/cluster-store";
 import { clusterLabel, pagePath } from "@/lib/clusters";
-import { BUILT_AT, COMMIT_SHA, CommitLink } from "@/components/BuildStamp";
+import { BUILT_AT, COMMIT_SHA, CommitLink, LicenseLink } from "@/components/BuildStamp";
 import {
   InFlightProvider, InFlightCell, InFlightCount, InFlightRest, InFlightTd, StatusFreshness,
 } from "@/components/InFlight";
@@ -439,7 +439,7 @@ export default async function StatusPage() {
         </p>
         <p className="mt-2">
           Built {BUILT_AT}
-          {COMMIT_SHA ? <> · <CommitLink /></> : null}.
+          {COMMIT_SHA ? <> · <CommitLink /></> : null} · <LicenseLink />.
         </p>
       </footer>
     </main>
