@@ -425,7 +425,11 @@
   \]
 
   \vfill
-  Returning to the expression on slide 10,
+  % ERRATA 2026-09-16: "slide 10" pointed at the belief-update frame; the
+  %   law-of-total-probability expression is frame 9 (footer numbering).
+  %   The two speaker notes below and at "HMM definition on slide 6" (frame 5)
+  %   were off by one the same way.
+  Returning to the expression on slide 9,
   \[
     \hmmfactor{hmmFirst}{\Pr(X_{n+1}=a\mid X_{1:n}=x_{1:n})}
       =\sum_{i\in S}
@@ -450,7 +454,7 @@
 
   \note{The next-token probability vector records one probability for every
   token in the alphabet. Return explicitly to the law-of-total-probability
-  expression on slide 10, now replacing the posterior term with the belief
+  expression on slide 9, now replacing the posterior term with the belief
   state notation. For a fixed hidden state i, the sum over j is the
   probability of emitting token a next. The matrix A stores these
   probabilities, with one row per hidden state and one column per token.
@@ -659,7 +663,7 @@
   the initial vector normalises the empty word, and nonnegativity of every
   word probability then gives a valid stochastic process.
 
-  The component list deliberately parallels the HMM definition on slide 6.
+  The component list deliberately parallels the HMM definition on slide 5.
   A GHMM replaces the finite hidden-state set by a real vector space of
   dimension d and adds the column vector phi used to evaluate word weights.
   An ordinary HMM is the special case in which the symbol-labelled matrices
