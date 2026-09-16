@@ -131,8 +131,9 @@ clusters:
         title: Alignment in Practice 2
         lead: Garrett
         doc: https://docs.google.com/document/d/1ZI_JIg_-CeMZpZKxlh8TdmVmn6CK3UIbIz_Wl-g9U8o/edit?tab=t.g73qz582zioy
-        port: never
-        note: reading + discussion day, run from the Doc — the two discussion worksheets live there
+        source: ready
+        worksheets:
+          - alignment-in-practice-ii
 
       - code: A.4
         title: Reward Learning Theory

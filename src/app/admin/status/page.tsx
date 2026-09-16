@@ -148,8 +148,8 @@ function DeckChips({ deck, basePath, tone, many }: { deck: Deck; basePath: strin
   // own \title{}, or the `slides:` title); a lone deck needs no label.
   const label = many && deck.title ? <Muted>{deck.title}</Muted> : null;
   if (deck.kind === "built") {
-    // The deck's LaTeX source is in the repo. `pdf` is false only in a
-    // --check run, which compiles nothing.
+    // The deck's source (LaTeX or Typst) is in the repo. `pdf` is false only
+    // in a --check run, which compiles nothing.
     const file = `${basePath}/downloads/${deck.slug}/${deck.slug}-${deck.stem}`;
     return (
       <span className="flex flex-wrap items-center gap-1.5">
@@ -157,7 +157,7 @@ function DeckChips({ deck, basePath, tone, many }: { deck: Deck; basePath: strin
         {deck.pdf
           ? <Chip tone={tone} href={`${file}.pdf`}>pdf</Chip>
           : <Muted>not built in this run</Muted>}
-        {deck.tex && <Chip tone={tone} href={`${file}.tex`}>tex</Chip>}
+        {deck.sourceStaged && <Chip tone={tone} href={`${file}.${deck.source}`}>{deck.source}</Chip>}
       </span>
     );
   }
