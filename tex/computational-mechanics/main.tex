@@ -3,6 +3,9 @@
 %--- end ---
 \documentclass[11pt]{article}
 \IfFileExists{iliad.sty}{\usepackage[boxes]{iliad}}{\usepackage[boxes]{../iliad}}
+% float: the Mess3 solution carries a figure inside its box, where a float
+% cannot go; [H] sets it in place.
+\usepackage{float}
 
 \title{Computational Mechanics}
 \author{\authorname{Xavier Poncini}\\ \affiliation{Simplex}
@@ -87,96 +90,68 @@ Read \href{https://arxiv.org/pdf/2405.15943}{Transformers represent belief state
   \end{itemize}
 \end{itemize}
 
-% The per-block Exercise/Tutorial sheets the Doc linked on Drive are this
-% page's own sections now, so these point inward. "Exercise Sheet" is
-% brace-grouped only to dodge the \hyperref lint, which reads the capital S
-% after "Exercise" as a frozen reference number; there is no number to go
-% stale. Block 3's lecture links stay on Drive -- that deck has no source.
-\subsection{Main content}\label{main-content}
+% The roadmap is the Schedule from the source repo's README
+% (iliad-team/iliad-intensive-C.3), which is what the day was taught from on
+% 10 Sep 2026. Its links pointed at the repo's own PDFs; they point at this
+% page's decks and sections instead. Words are the README's.
+\subsection{Schedule}\label{schedule}
 
-\begin{enumerate}
+\begin{itemize}
 \item
-  {[}\href{https://iliad-intensive.org/downloads/computational-mechanics/computational-mechanics-slides.pdf}{Lecture slides}{]} \textbf{Overview and scope}
-  \begin{enumerate}
-  \item
-    What is computational mechanics?
-  \item
-    Computational mechanics \& AI safety
-  \item
-    Where is the research program at?
-  \item
-    What will we cover today?
-  \end{enumerate}
+  \textbf{10:00--10:30} --- \href{https://iliad-intensive.org/downloads/computational-mechanics/computational-mechanics-slides.pdf}{Lecture: Overview and scope}
 \item
-  \textbf{Computational mechanics foundations}
-  \begin{enumerate}
-  \item
-    {[}\href{https://iliad-intensive.org/downloads/computational-mechanics/computational-mechanics-slides.pdf}{Lecture Slides} \& \hyperref[hidden-markov-models]{{Exercise Sheet}}{]} \textbf{Hidden Markov Models (HMMs)}
-    \begin{enumerate}
-    \item
-      What is an HMM?
-    \item
-      Notions of minimality \& uniqueness
-    \item
-      What is a generalised HMM (GHMM)? (see e.g. \href{https://arxiv.org/pdf/2507.07432}{Neural networks leverage nominally quantum and post-quantum representations})
-    \end{enumerate}
-  \item
-    {[}\href{https://drive.google.com/file/d/1IPz8Pq939VbjmVqYcYDybdJ02yvdgMGS/view?usp=sharing}{Lecture slides} \& \hyperref[prediction]{{Exercise Sheet}}{]} \textbf{Prediction}
-    \begin{enumerate}
-    \item
-      Belief states
-    \item
-      Next-token (probability) vectors
-    \item
-      Mixed-state-presentation (MSP) (see e.g. \href{https://csc.ucdavis.edu/~cmg/papers/msc.pdf}{Mixed States of Hidden Markov Processes and Their Presentations: What and how to calculate})
-    \end{enumerate}
-  \end{enumerate}
+  \textbf{10:30--11:15} --- \href{https://iliad-intensive.org/downloads/computational-mechanics/computational-mechanics-slides-2-predicting-the-future.pdf}{Lecture: Predicting the future}
 \item
-  \textbf{Applications}
-  \begin{enumerate}
-  \item
-    {[}\hyperref[designing-processes]{Tutorial Sheet}{]} \textbf{Designing processes worth studying}
-    \begin{enumerate}
-    \item
-      Heuristic ensuring beliefs are meaningfully richer than obs probs
-    \item
-      Non-ergodic
-    \item
-      Factors (see e.g. \href{https://arxiv.org/pdf/2602.02385v1}{Transformers learn factored representations})
-    \end{enumerate}
-  \item
-    {[}\hyperref[belief-geometry]{Reading guide}{]} \textbf{Identifying belief geometry in transformers}
-    \begin{enumerate}
-    \item
-      For the case of HMMs -- {[}Read: \href{https://arxiv.org/pdf/2405.15943}{Transformers represent belief state geometry in their residual stream}{]}.
-    \item
-      {[}extension{]} For the case of GHMMs -- {[}Read: \href{https://arxiv.org/pdf/2507.07432}{Neural networks leverage nominally quantum and post-quantum representations}{]}
-    \end{enumerate}
-  \item
-    {[}\hyperref[how-transformers-do-it]{Tutorial Sheet}{]} \textbf{How do transformers do it?}
-    \begin{enumerate}
-    \item
-      How do transformers construct representations of belief states? Partial answer in narrow setting -- {[}Read: \href{https://arxiv.org/pdf/2502.01954v2}{Constrained belief updates explain geometric structures in transformer representations}{]}
-    \item
-      How do they decode from belief states to log obs probs then obs probs? This is an open problem!
-    \end{enumerate}
-  \end{enumerate}
-\end{enumerate}
+  \textbf{11:15--11:30} --- \emph{Break}
+\item
+  \textbf{11:30--12:30} --- \hyperref[sec:predicting-the-future]{{Exercises}: Predicting the future}
+\item
+  \textbf{12:30--13:30} --- \emph{Lunch}
+\item
+  \textbf{13:30--14:15} --- \href{https://iliad-intensive.org/downloads/computational-mechanics/computational-mechanics-slides-3-representing-the-past.pdf}{Lecture: Representing the past}
+\item
+  \textbf{14:15--15:45} --- \hyperref[sec:representing-the-past]{{Exercises}: Representing the past}
+\item
+  \textbf{15:45--16:00} --- \emph{Break}
+\item
+  \textbf{16:00--17:45} --- \hyperref[sec:belief-geometry]{Reading \& Discussion: Transformers represent belief geometry}
+\item
+  \textbf{17:45--18:00} --- Feedback
+\end{itemize}
 
-\section{Hidden Markov models}\label{hidden-markov-models}
-\input{block_2}
+% Parts 2-4 are the source repo's written-exercises/CompMechExercisesPt{2,3}
+% and reading-guides/CompMechReadingGuidePt4, run through a scripted
+% transform (environment names only; every word and formula is the
+% author's). Part 1 is lecture-only: its deck is the first Slides row.
+\section{Predicting the future}\label{sec:predicting-the-future}
+\input{part2}
 
-\section{Prediction}\label{prediction}
-\input{block_3}
+\section{Representing the past}\label{sec:representing-the-past}
+\input{part3}
 
-\section{Identifying belief geometry in transformers}\label{belief-geometry}
-\input{block_4}
+\section{Identifying belief geometry in transformers}\label{sec:belief-geometry}
+\input{part4}
 
-\section{Designing processes}\label{designing-processes}
-\input{block_5}
+% From the source repo's README, "Python exercises: HMM from scratch".
+\section{Python exercises: HMM from scratch}\label{sec:python-exercises}
 
-\section{How do transformers do it?}\label{how-transformers-do-it}
-\input{block_6}
+The Python exercises are ARENA-style notebooks in two parts. Each part has an
+\textbf{exercises} notebook (with \texttt{\# YOUR CODE HERE} stubs, inline tests, and
+collapsible solutions) and a fully worked \textbf{solutions} notebook.
+
+\begin{itemize}
+\item
+  \textbf{Part 1 --- Sequence probabilities \& next-token distributions} (exercises) --- \href{https://colab.research.google.com/github/iliad-team/iliad-intensive-C.3/blob/main/python-exercises/colab/part1_sequence_probabilities_exercises_colab.ipynb}{Open in Colab}
+\item
+  Part 1 (solutions) --- \href{https://colab.research.google.com/github/iliad-team/iliad-intensive-C.3/blob/main/python-exercises/colab/part1_sequence_probabilities_solutions_colab.ipynb}{Open in Colab}
+\item
+  \textbf{Part 2 --- Belief states} (exercises) --- \href{https://colab.research.google.com/github/iliad-team/iliad-intensive-C.3/blob/main/python-exercises/colab/part2_belief_states_exercises_colab.ipynb}{Open in Colab}
+\item
+  Part 2 (solutions) --- \href{https://colab.research.google.com/github/iliad-team/iliad-intensive-C.3/blob/main/python-exercises/colab/part2_belief_states_solutions_colab.ipynb}{Open in Colab}
+\end{itemize}
+
+The Colab notebooks are self-contained: their setup cells write the helper
+modules into the session, so there is nothing else to install or download.
 
 \section{Learn more}\label{learn-more}
 
