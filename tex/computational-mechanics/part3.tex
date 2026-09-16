@@ -317,13 +317,14 @@
     \item For each belief $\eta^{(x_{1:n})}\in\mathcal B$ from part (b),
       compute its associated next-token probability vector
       \[
+        \begin{gathered}
         p^{(x_{1:n})}
         :=\left(
           \Pr(X_{n+1}=a\mid X_{1:n}=x_{1:n})
         \right)_{a\in\{0,1\}}
-        =\eta^{(x_{1:n})}A,
-        \qquad
+        =\eta^{(x_{1:n})}A,\\[1mm]
         A_{ia}:=\sum_jT^{(a)}_{ij}.
+        \end{gathered}
       \]
       Visualise the belief geometry on the $2$-simplex over hidden states
       $(0,1,R)$ and the next-token geometry on the $1$-simplex over symbols
@@ -417,7 +418,7 @@
                 \epsilon(1)&\longleftrightarrow\eta^{(1)},\\
                 \epsilon(10)&\longleftrightarrow\eta^{(10)},&
                 \epsilon(11)&\longleftrightarrow\eta^{(11)},&
-                \epsilon(00)&\longleftrightarrow\eta^{(00)},&
+                \epsilon(00)&\longleftrightarrow\eta^{(00)},\\
                 \epsilon(01)&\longleftrightarrow\eta^{(01)}.
               \end{aligned}
             \]
@@ -703,14 +704,15 @@
 
           \item Updating $\eta^{(0)}$ by each symbol gives
             \[
+              \begin{gathered}
               \eta^{(00)}=
-                \begin{bmatrix}\tfrac{13}{87}&\tfrac{37}{87}&\tfrac{37}{87}\end{bmatrix},
-              \quad
+                \begin{bmatrix}\tfrac{13}{87}&\tfrac{37}{87}&\tfrac{37}{87}\end{bmatrix},\\[1mm]
               \eta^{(01)}=
                 \begin{bmatrix}\tfrac{52}{163}&\tfrac{37}{163}&\tfrac{74}{163}\end{bmatrix},
               \quad
               \eta^{(02)}=
                 \begin{bmatrix}\tfrac{52}{163}&\tfrac{74}{163}&\tfrac{37}{163}\end{bmatrix}.
+              \end{gathered}
             \]
             Cyclically permuting both the state coordinates and symbol labels
             gives the remaining six depth-two beliefs. The root has three
@@ -849,7 +851,7 @@
             \eta^{(x_{1:n}a)}
               =\frac{\eta^{(x_{1:n})}T^{(a)}}
                 {\eta^{(x_{1:n})}T^{(a)}\phi},
-            \qquad
+            \quad
             \Pr(X_{n+1}=a\mid X_{1:n}=x_{1:n})
               =\eta^{(x_{1:n})}T^{(a)}\phi.
           \]
@@ -1017,7 +1019,7 @@
             \[
               \Pr(X_{n+1}=a\mid X_{1:n}=x_{1:n})
                 =\eta^{(x_{1:n})}T^{(a)}\phi,
-              \qquad
+              \quad
               \eta^{(x_{1:n}a)}
                 =\frac{\eta^{(x_{1:n})}T^{(a)}}
                   {\eta^{(x_{1:n})}T^{(a)}\phi}.
@@ -1119,7 +1121,7 @@
             \[
               \begin{aligned}
                 \Pr(X_1=0)=\Pr(X_1=1)&=\frac12,\\
-                \Pr(X_{1:2}=00)=\Pr(X_{1:2}=11)&=\frac{17}{50},&
+                \Pr(X_{1:2}=00)=\Pr(X_{1:2}=11)&=\frac{17}{50},\\
                 \Pr(X_{1:2}=01)=\Pr(X_{1:2}=10)&=\frac4{25}.
               \end{aligned}
             \]

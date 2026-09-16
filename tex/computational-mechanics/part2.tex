@@ -129,15 +129,17 @@
 \label{ex:p2-2}
   For $x,x'\in\mathcal X_+^*$, define the relation $\sim$ by
   \[
+    \begin{aligned}
     x\sim x'
     \quad\Longleftrightarrow\quad
-    \Pr\!\left(
+    &\Pr\!\left(
       X_{|x|+1:|x|+|y|}=y\mid X_{1:|x|}=x
-    \right)
-    =
+    \right)\\
+    &\qquad=
     \Pr\!\left(
       X_{|x'|+1:|x'|+|y|}=y\mid X_{1:|x'|}=x'
     \right)
+    \end{aligned}
   \]
   for every $y\in\mathcal X^*$. Define the causal state of $x$ by
   \[
@@ -581,15 +583,17 @@
     \item In the case where every prefix is allowable, use the conditional
       chain rule to write
       \[
-        \Pr\!\left(
+        \begin{aligned}
+        &\Pr\!\left(
           X_{n+1:n+k}=z_{1:k}\mid X_{1:n}=x_{1:n}
-        \right)
-        =
+        \right)\\
+        &\qquad=
         \prod_{j=0}^{k-1}
         \Pr\!\left(
           X_{n+j+1}=z_{j+1}
           \mid X_{1:n+j}=x_{1:n}z_{1:j}
         \right).
+        \end{aligned}
       \]
       Write the analogous product after $x'_{1:m}$ and compare its factors.
       Deal separately with the zero-probability case from part (b), and
