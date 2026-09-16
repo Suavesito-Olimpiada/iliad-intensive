@@ -372,43 +372,67 @@ html.diff-unsync .diff-col {
   padding-right: 0.5rem;
 }
 
-/* ── Off-screen worksheet blocks are not laid out until scrolled near ───────
- *
- * A maths-heavy worksheet is almost entirely KaTeX: singular-learning-theory
- * renders 1,909 formulas into ~95,000 DOM nodes, 96% of the page. Laying all
- * of that out costs ~1.1s on a mid-range laptop before anything appears, which
- * is what makes the big worksheets feel slow to open on other people's
- * machines (they are fine on a fast desktop, which is why this went unnoticed).
- *
- * `content-visibility: auto` lets the browser skip layout and paint for a block
- * until it scrolls near the viewport — so only the ~1.5 screens actually being
- * read get laid out. Measured on the live SLT page at 4x CPU throttle: layout
- * 1146ms -> 65ms, first paint 1804ms -> 580ms, load 3486ms -> 1335ms.
- *
- * `contain-intrinsic-size: auto <n>px` is the placeholder height used before a
- * block has ever been rendered; `auto` makes the browser remember each block's
- * real size once seen, so the scrollbar settles instead of jumping. The
- * document's total height measured identical to baseline.
- *
- * Deliberately scoped to DIRECT children of .prose: each is a paragraph,
- * heading or display equation — a sensible unit to skip. Applying it deeper
- * (to individual .katex spans) would fragment inline text mid-line, and
- * applying it to .prose itself would skip the entire worksheet at once.
- *
- * Not a visibility mechanism: skipped blocks stay in the accessibility tree,
- * stay findable with ctrl-F, and remain valid anchor targets — deep-linking to
- * the last heading of SLT lands at the same scroll offset as without the rule.
- */
-.prose > * {
+
+/* ═══════════════════════════════════════════════════════════════════════════
+   BEGIN content-visibility (performance) — SELF-CONTAINED. To remove this
+   feature, delete everything between the BEGIN and END markers; nothing else
+   in the codebase (markup, components, build) refers to it. Added in PR #152.
+   ═══════════════════════════════════════════════════════════════════════════
+
+   WHAT: `content-visibility: auto` lets the browser skip layout and paint for
+   a block until it scrolls near the viewport. The maths-heavy worksheets are
+   30k–70k DOM elements of KaTeX markup (SLT: 1,955 formulas, 69k elements);
+   without this the browser lays out all of it before first paint. Measured on
+   SLT in headless Chrome at 4x CPU throttle: layout 390ms → 110ms,
+   parse+style+layout 1150ms → 520ms, first paint 270ms → 230ms. Bytes and DOM
+   node count are unchanged.
+
+   `contain-intrinsic-size: auto 120px` is the placeholder height of a block
+   that has never been rendered; `auto` remembers the real size once seen, so
+   the scrollbar settles after the first pass.
+
+   WHERE, and why the selector is a whitelist rather than `.prose > *`:
+   content-visibility implies CSS containment, and a contained block's margins
+   no longer collapse with its children's. On a block with no padding whose
+   children carry margins — ul/ol (li), blockquote (p), and the bare <div id=…>
+   wrappers the converter emits around labelled examples and equations — that
+   adds visible space (measured: +2.4% page height, headings up to 680px lower).
+   So the rule is applied only to blocks whose children's margins never
+   collapsed through them anyway, because they have padding or only inline
+   children: paragraphs, headings, the padded boxes (section, details, classed
+   div), figures and display equations — and, inside a bare wrapper div, to its
+   padded/inline children instead of the wrapper. Lists and blockquotes are
+   left alone (15 of SLT's 372 blocks, about 1% of its formulas).
+
+   A zero-height block — a paragraph holding only a \gdef macro formula — is
+   also excluded: containment would stop its top and bottom margins collapsing
+   through it, adding one paragraph gap.
+
+   VERIFIED 2026-09-16 (headless Chrome, SLT): with every <details> opened and
+   the page fully scrolled, all 68,877 element boxes (top, left, width, height)
+   are identical to the page without this block; deep links land at the same
+   offset. Print forces everything visible so a PDF export is never partial.
+
+   KNOWN COST: scrolling UP through never-visited blocks jumps slightly as
+   placeholders take their real size (first pass only). Browsers without
+   support (Safari < 18, Firefox < 125) ignore the property and get the old
+   behaviour. */
+.prose > :is(p, h2, h3, h4, section, details, figure, div[class], .katex-display),
+.prose > div:not([class]) > :is(p, div[class], .katex-display) {
   content-visibility: auto;
   contain-intrinsic-size: auto 120px;
 }
 
-/* Printing must not depend on what was scrolled past: force every block to lay
- * out so a print/PDF export contains the whole worksheet, not just the parts
- * that happened to be visited. */
+/* Zero-height formula-only blocks (\gdef macro paragraphs) — see WHERE above. */
+.prose p:has(> .katex:only-child > .katex-html:empty),
+.prose .katex-display:has(> .katex-html:empty) {
+  content-visibility: visible;
+}
+
 @media print {
-  .prose > * {
+  .prose > *,
+  .prose > * > * {
     content-visibility: visible;
   }
 }
+/* ═══ END content-visibility (performance) ══════════════════════════════════ */
