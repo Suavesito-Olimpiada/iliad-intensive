@@ -350,6 +350,17 @@ tex/<slug>/slides-<label>.tex  # further decks — a day with more than one lect
   than one row, each is labelled from the deck's own `\title{}` (beamer's
   `\title[short]{long}` included); a lone deck stays unlabelled. A folder can
   also hold only `slides-<label>.tex` files and no `slides.tex`.
+- **Naming a deck's row.** When the decks share a `\title{}` and differ only
+  in `\subtitle{}`, the rows would all read the same. Open the deck with the
+  same comment block a worksheet uses and the row takes that title instead:
+  ```latex
+  %--- iliad ---
+  % title: 2. Predicting the future
+  %--- end ---
+  \documentclass[aspectratio=169]{beamer}
+  ```
+  `title:` is the only key a deck's block carries; the deck's `\title{}` is
+  still what beamer prints. Without the block the row falls back to `\title{}`.
 - **Handout variant.** A deck that mentions `\HANDOUT` opts into a second,
   collapsed build. Guard the reveals with it in the preamble:
   ```latex

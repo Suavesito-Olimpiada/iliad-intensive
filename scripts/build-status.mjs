@@ -71,10 +71,17 @@ function frontmatterOf(slug) {
  * staged it (a --check run compiles no PDFs).
  */
 const DECK_RE = /^(slides(?:-[a-z0-9][a-z0-9-]*)?)\.tex$/;
-// A deck's own \title{} (beamer's \title[short]{long} included), lightly
-// de-TeXed into a label; null when the deck sets none. The site reads the same
-// thing off the staged .tex (src/lib/content.ts) — keep the two in step.
+// A deck's label: a `% title:` in its own `%--- iliad ---` block if it has one
+// (the same comment block a worksheet's main.tex opens with), else its
+// \title{} (beamer's \title[short]{long} included), lightly de-TeXed; null
+// when it sets neither. The override exists because several decks of one day
+// often share a \title{} and differ only in \subtitle{}. The site reads the
+// same thing off the staged .tex (src/lib/content.ts) — keep the two in step.
+const DECK_META_RE = /^%--- iliad ---\r?\n([\s\S]*?)^%--- end ---/m;
 function deckTitle(src) {
+  const meta = DECK_META_RE.exec(src);
+  const forced = meta && /^%\s*title:\s*(.+?)\s*$/m.exec(meta[1]);
+  if (forced) return forced[1].replace(/^(["'])(.*)\1$/, "$2") || null;
   const m = /\\title(?:\[[^\]]*\])?\{((?:[^{}]|\{[^{}]*\})*)\}/.exec(src);
   if (!m) return null;
   const t = m[1]

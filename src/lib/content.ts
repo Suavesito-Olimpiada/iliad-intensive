@@ -67,13 +67,18 @@ export async function listDownloads(slug: string): Promise<string[]> {
 
 /** A compiled deck staged under public/downloads/<slug>/ — one per
  *  tex/<slug>/slides.tex or slides-<label>.tex, staged as <slug>-<stem>.*.
- *  `title` is the deck's own \title{}, read off the staged .tex so a page
- *  with several decks can name each row. */
+ *  `title` names the deck's row when a page has several: a `% title:` in the
+ *  deck's own `%--- iliad ---` block if set, else its \title{}, both read off
+ *  the staged .tex. */
 export type StagedDeck = { stem: string; title: string | null; handout: boolean; tex: boolean };
 
-// The same light de-TeXing scripts/build-status.mjs applies (deckTitle) —
-// keep the two in step.
+// The same lookup scripts/build-status.mjs applies (deckTitle) — keep the two
+// in step.
+const DECK_META_RE = /^%--- iliad ---\r?\n([\s\S]*?)^%--- end ---/m;
 function deckTitle(src: string): string | null {
+  const meta = DECK_META_RE.exec(src);
+  const forced = meta && /^%\s*title:\s*(.+?)\s*$/m.exec(meta[1]);
+  if (forced) return forced[1].replace(/^(["'])(.*)\1$/, "$2") || null;
   const m = /\\title(?:\[[^\]]*\])?\{((?:[^{}]|\{[^{}]*\})*)\}/.exec(src);
   if (!m) return null;
   const t = m[1]
