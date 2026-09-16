@@ -2,6 +2,8 @@ import type { ReactNode } from "react";
 import type { Frontmatter, StagedDeck } from "@/lib/content";
 
 const LABELS: Record<string, string> = { pdf: "PDF", tex: "LaTeX", mdx: "Markdown" };
+// A deck's source download, labelled by what it is written in.
+const DECK_SOURCE: Record<"tex" | "typ", string> = { tex: "LaTeX", typ: "Typst" };
 
 // Only PDFs get a View box: GitHub Pages serves .tex/.mdx with a download-y
 // MIME type, so a "view" link on those would just re-download — download is
@@ -52,7 +54,8 @@ function Box({
  *
  * A deck that opted into a collapsed build ships <slug>-<stem>-handout.pdf
  * too; its row then reads present · handout · LaTeX instead of the
- * view · download · LaTeX it shows for a single-variant deck.
+ * view · download · LaTeX it shows for a single-variant deck. The last box is
+ * the deck's source, labelled LaTeX or Typst by what it was written in.
  *
  * Server-rendered: the with/without-solutions swap is public/site.js reading
  * the data-sol/data-nosol pairs off each link — no React on the client.
@@ -137,8 +140,8 @@ export function DownloadsRow({
                 <Box href={href(`${slug}-${deck.stem}.pdf`)} download>download</Box>
               </>
             )}
-            {deck.tex && (
-              <Box href={href(`${slug}-${deck.stem}.tex`)} download>LaTeX</Box>
+            {deck.source && (
+              <Box href={href(`${slug}-${deck.stem}.${deck.source}`)} download>{DECK_SOURCE[deck.source]}</Box>
             )}
             {deckTitle(deck.title)}
           </li>

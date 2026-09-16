@@ -66,10 +66,26 @@ export async function listDownloads(slug: string): Promise<string[]> {
 }
 
 /** A compiled deck staged under public/downloads/<slug>/ — one per
- *  tex/<slug>/slides.tex or slides-<label>.tex, staged as <slug>-<stem>.*.
- *  `title` is the deck's own \title{}, read off the staged .tex so a page
+ *  tex/<slug>/slides.tex or slides-<label>.tex (or .typ), staged as
+ *  <slug>-<stem>.*. `title` is the deck's own \title{} (LaTeX) or
+ *  `#set document(title:)` (Typst), read off the staged source so a page
  *  with several decks can name each row. */
-export type StagedDeck = { stem: string; title: string | null; handout: boolean; tex: boolean };
+export type StagedDeck = {
+  stem: string;
+  title: string | null;
+  handout: boolean;
+  /** the deck's source format, when its source was staged for download */
+  source: "tex" | "typ" | null;
+};
+
+// A Typst deck's label: its `#set document(title: "…")`, if it sets one. Same
+// regex as scripts/build-status.mjs (typDeckTitle) — keep the two in step.
+function typDeckTitle(src: string): string | null {
+  const m = /#set\s+document\(\s*(?:[^)]*?,\s*)?title\s*:\s*"((?:[^"\\]|\\.)*)"/.exec(src);
+  if (!m) return null;
+  const t = m[1].replace(/\\(.)/g, "$1").replace(/\s+/g, " ").trim();
+  return t || null;
+}
 
 // The same light de-TeXing scripts/build-status.mjs applies (deckTitle) —
 // keep the two in step.
@@ -96,13 +112,16 @@ export async function listDecks(slug: string, files: string[]): Promise<StagedDe
     .filter((s): s is string => !!s && !s.endsWith("-handout"))
     .sort((a, b) => (a === "slides" ? -1 : b === "slides" ? 1 : a.localeCompare(b)));
   return Promise.all(stems.map(async (stem) => {
-    const tex = files.includes(`${slug}-${stem}.tex`);
+    const source: StagedDeck["source"] = files.includes(`${slug}-${stem}.tex`) ? "tex"
+      : files.includes(`${slug}-${stem}.typ`) ? "typ" : null;
     let title: string | null = null;
-    if (tex) {
-      try { title = deckTitle(await readFile(path.join(DOWNLOADS_DIR, slug, `${slug}-${stem}.tex`), "utf8")); }
-      catch { /* a deck without a readable .tex simply has no label */ }
+    if (source) {
+      try {
+        const src = await readFile(path.join(DOWNLOADS_DIR, slug, `${slug}-${stem}.${source}`), "utf8");
+        title = source === "tex" ? deckTitle(src) : typDeckTitle(src);
+      } catch { /* a deck without a readable source simply has no label */ }
     }
-    return { stem, title, handout: files.includes(`${slug}-${stem}-handout.pdf`), tex };
+    return { stem, title, handout: files.includes(`${slug}-${stem}-handout.pdf`), source };
   }));
 }
 

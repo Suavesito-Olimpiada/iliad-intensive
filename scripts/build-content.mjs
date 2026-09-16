@@ -262,20 +262,29 @@ const ARTIFACT_NAME = new Set(["main.autolabel.tex", "main-nosol.tex", "main-nos
 // The decks a worksheet folder ships. `slides.tex` is the deck every folder has
 // had so far; a day with more than one lecture adds `slides-<label>.tex` beside
 // it (label: lowercase letters, digits, hyphens). Each compiles and is staged on
-// its own as <slug>-<stem>.pdf/.tex, and the page shows one Slides row per deck:
-// slides.tex first, then the rest in filename order — that order is the only
-// sequencing there is, so name a second deck with it in mind. A stem may not
-// end in -handout: that suffix belongs to the collapsed build, and
+// its own as <slug>-<stem>.pdf + its source, and the page shows one Slides row
+// per deck: slides.tex first, then the rest in filename order — that order is
+// the only sequencing there is, so name a second deck with it in mind. A stem
+// may not end in -handout: that suffix belongs to the collapsed build, and
 // slides-foo-handout.pdf has to mean "the handout of slides-foo".
-const DECK_RE = /^(slides(?:-[a-z0-9][a-z0-9-]*)?)\.tex$/;
+//
+// A deck is LaTeX (.tex, the pdflatex ladder below) or Typst (.typ, one
+// `typst compile`); the stem is what names it, so slides.tex and slides.typ in
+// one folder is a clash the build refuses rather than picks between.
+const DECK_RE = /^(slides(?:-[a-z0-9][a-z0-9-]*)?)\.(tex|typ)$/;
 const deckSources = (dir) => {
   if (!existsSync(dir)) return [];
   return readdirSync(dir)
     .map((f) => DECK_RE.exec(f))
     .filter((m) => m && !m[1].endsWith("-handout"))
-    .map((m) => ({ file: m[0], stem: m[1] }))
+    .map((m) => ({ file: m[0], stem: m[1], ext: m[2] }))
     .sort((a, b) => (a.stem === "slides" ? -1 : b.stem === "slides" ? 1 : a.stem.localeCompare(b.stem)));
 };
+
+// Typst: a single static binary, pinned + checksum-verified by
+// scripts/install-typst.sh (CI runs it; so does ./setup.sh). Override the
+// binary with TYPST=/path/to/typst.
+const TYPST = process.env.TYPST ?? "typst";
 
 const hashPath = (h, p) => {
   if (!existsSync(p)) return;
@@ -479,10 +488,13 @@ async function buildSlug(slug) {
   };
   const isTex = existsSync(path.join(dir, "main.tex"));
   // A worksheet MAY ship slide decks — slides.tex, plus slides-<label>.tex for
-  // a day with more than one lecture (any dialect — usually beamer). Each is
-  // compiled to <stem>.pdf and hosted alongside the downloads; none is ever
-  // converted to MDX (slides aren't a web page, only a download).
+  // a day with more than one lecture (any dialect — usually beamer), or the
+  // same stems as .typ for a Typst deck. Each is compiled to <stem>.pdf and
+  // hosted alongside the downloads; none is ever converted to MDX (slides
+  // aren't a web page, only a download).
   const decks = deckSources(dir);
+  const clash = decks.find((d, i) => decks.slice(0, i).some((e) => e.stem === d.stem));
+  if (clash) return done(false, `slides: ${clash.stem}.tex and ${clash.stem}.typ are both present — one stem is one deck; rename one of them`);
   const hasSlidesTex = decks.length > 0;
 
   // Guardrail: main.tex loads iliad.sty local-first (for standalone use of a
@@ -674,6 +686,9 @@ async function buildSlug(slug) {
   //     as slides-handout.pdf next to the presentation build. Decks with no
   //     reveals never mention \HANDOUT and so build once, as before.
   for (const deck of decks) {
+    // A Typst deck has no \pause to collapse and no bibtex/biber pass: it is
+    // one `typst compile`, so none of the LaTeX-ladder detection below applies.
+    if (deck.ext === "typ") { deck.handout = false; continue; }
     const src = readFileSync(path.join(dir, deck.file), "utf8");
     deck.handout = /\\HANDOUT\b/.test(src);
     // Which bibliography pass this deck needs. The house decks use bibtex +
@@ -686,6 +701,26 @@ async function buildSlug(slug) {
   }
   if (!CHECK_ONLY) {
     for (const deck of decks) {
+      if (deck.ext === "typ") {
+        // --ignore-system-fonts: CI and every laptop then embed the same fonts
+        // (Typst ships Libertinus, New Computer Modern, DejaVu Sans Mono), so a
+        // deck renders identically everywhere. A deck that needs another face
+        // drops the .ttf/.otf files in tex/<slug>/fonts/ and they are picked up.
+        const fonts = path.join(dir, "fonts");
+        const argv = ["compile", "--ignore-system-fonts",
+          ...(existsSync(fonts) ? ["--font-path", fonts] : []),
+          deck.file, `${deck.stem}.pdf`];
+        try {
+          await exec(TYPST, argv, { cwd: dir });
+        } catch (e) {
+          const out = `${e.stderr ?? ""}${e.stdout ?? ""}`;
+          const errLine = e.code === "ENOENT"
+            ? `typst not found — run scripts/install-typst.sh (see docs/DEVELOPMENT.md)`
+            : (out.split("\n").find((l) => /^error/.test(l.trim())) ?? out.trim().split("\n")[0] ?? "typst failed");
+          return done(false, `slides build failed (${deck.stem}): ${errLine.trim()}`);
+        }
+        continue;
+      }
       // exec() passes argv straight through (no shell), so the \def wrapper needs
       // no quoting beyond JS's own backslash escapes.
       const variants = [[deck.stem, deck.file]];
@@ -721,8 +756,8 @@ async function buildSlug(slug) {
       if (ext) slidesUrl = typeof ext === "string" ? ext : ext.url ?? null;
     } catch { /* frontmatter validity is the render gate's problem */ }
     notes.push(slidesUrl
-      ? "⚠ warning: slides only in PDF form (external `slides:` link, no LaTeX source to build)"
-      : "⚠ warning: no slides for this worksheet (add slides.tex to build a deck, or a `slides:` frontmatter URL to link one)");
+      ? "⚠ warning: slides only in PDF form (external `slides:` link, no LaTeX/Typst source to build)"
+      : "⚠ warning: no slides for this worksheet (add slides.tex or slides.typ to build a deck, or a `slides:` frontmatter URL to link one)");
   }
 
   // 3. author figures: fig/*.pdf → public/uploads/<slug>/*.svg; web-native
@@ -779,12 +814,12 @@ async function buildSlug(slug) {
       copyFileSync(path.join(dir, "main-nosol.tex"), path.join(dl, `${slug}-nosol.tex`));
     }
     // slide decks (no solutions variant): ship each PDF to view/download and
-    // its .tex to download. Named <slug>-<stem>.* (slides, slides-<label>) so
-    // listDecks finds them. The collapsed build, when a deck opted into one,
-    // rides along as <slug>-<stem>-handout.pdf.
+    // its source (.tex or .typ) to download. Named <slug>-<stem>.* (slides,
+    // slides-<label>) so listDecks finds them. The collapsed build, when a deck
+    // opted into one, rides along as <slug>-<stem>-handout.pdf.
     for (const deck of decks) {
       copyFileSync(path.join(dir, `${deck.stem}.pdf`), path.join(dl, `${slug}-${deck.stem}.pdf`));
-      copyFileSync(path.join(dir, deck.file), path.join(dl, `${slug}-${deck.stem}.tex`));
+      copyFileSync(path.join(dir, deck.file), path.join(dl, `${slug}-${deck.stem}.${deck.ext}`));
       if (deck.handout) {
         copyFileSync(path.join(dir, `${deck.stem}-handout.pdf`), path.join(dl, `${slug}-${deck.stem}-handout.pdf`));
       }
