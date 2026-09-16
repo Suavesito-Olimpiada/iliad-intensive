@@ -48,9 +48,9 @@ function Box({
  * hosted here), then every compiled deck (`decks`, from listDecks: slides.tex,
  * then slides-<label>.tex by filename). A day whose main lecture exists only
  * as a hosted deck and whose guest lecture compiles from source shows both.
- * With more than one row the deck's title (its own \title{}, or the `slides:`
- * title) follows the boxes so a reader can tell them apart; a lone deck stays
- * unlabelled, as it always was.
+ * With more than one row the deck's title (a `% title:` in its `%--- iliad ---`
+ * block, else its own \title{}; or the `slides:` title) follows the boxes so a
+ * reader can tell them apart; a lone deck stays unlabelled, as it always was.
  *
  * A deck that opted into a collapsed build ships <slug>-<stem>-handout.pdf
  * too; its row then reads present · handout · LaTeX instead of the

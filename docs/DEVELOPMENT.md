@@ -41,7 +41,10 @@ together define the authoring contract.
   render gate only (fast). `--jobs N` sets parallel worksheet builds
   (default 4; worksheets are independent, logs are buffered per sheet).
   Non-zero exit on any failure, with the converter's `file:line` messages.
-  Converter ERRORs fail the build; warnings don't. A worksheet that builds
+  Converter ERRORs fail the build; warnings don't. An overfull line in the
+  compiled PDF — an equation or word wider than the page — is a warning too,
+  named by source `file:line`; break the line in the source rather than
+  leaving it, since the web column is no wider and it escapes there as well. A worksheet that builds
   cleanly prints nothing — the run ends in one summary line, and warnings and
   failures are the only per-sheet output. `--quiet` drops even that summary
   (the watch loop passes it, having its own line to print).
