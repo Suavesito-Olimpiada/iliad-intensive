@@ -374,17 +374,23 @@ html.diff-unsync .diff-col {
 
 
 /* ═══════════════════════════════════════════════════════════════════════════
-   BEGIN content-visibility (performance) — SELF-CONTAINED. To remove this
-   feature, delete everything between the BEGIN and END markers; nothing else
-   in the codebase (markup, components, build) refers to it. Added in PR #152.
+   BEGIN content-visibility (performance)
    ═══════════════════════════════════════════════════════════════════════════
+
+   TO TURN OFF: set `LAZY_LAYOUT = false` in src/lib/perf-flags.ts and rebuild.
+   Every selector below is scoped to `.prose.lazy-layout`; the worksheet page
+   only emits that class when the flag is true, so with it false these rules
+   match nothing and the page renders exactly as before the feature existed.
+   TO REMOVE: delete this block, src/lib/perf-flags.ts, the import + className
+   logic in src/app/[cluster]/[slug]/page.tsx, and the docs/INTERNALS.md row.
+   Nothing else in the codebase refers to any of it. Added in PR #152.
 
    WHAT: `content-visibility: auto` lets the browser skip layout and paint for
    a block until it scrolls near the viewport. The maths-heavy worksheets are
    30k–70k DOM elements of KaTeX markup (SLT: 1,955 formulas, 69k elements);
    without this the browser lays out all of it before first paint. Measured on
-   SLT in headless Chrome at 4x CPU throttle: layout 390ms → 110ms,
-   parse+style+layout 1150ms → 520ms, first paint 270ms → 230ms. Bytes and DOM
+   SLT in headless Chrome on one core at 6x CPU throttle: main-thread work
+   2.98s → 1.58s, load 2.65s → 1.53s, layout 1084ms → 232ms. Bytes and DOM
    node count are unchanged.
 
    `contain-intrinsic-size: auto 120px` is the placeholder height of a block
@@ -417,21 +423,21 @@ html.diff-unsync .diff-col {
    placeholders take their real size (first pass only). Browsers without
    support (Safari < 18, Firefox < 125) ignore the property and get the old
    behaviour. */
-.prose > :is(p, h2, h3, h4, section, details, figure, div[class], .katex-display),
-.prose > div:not([class]) > :is(p, div[class], .katex-display) {
+.prose.lazy-layout > :is(p, h2, h3, h4, section, details, figure, div[class], .katex-display),
+.prose.lazy-layout > div:not([class]) > :is(p, div[class], .katex-display) {
   content-visibility: auto;
   contain-intrinsic-size: auto 120px;
 }
 
 /* Zero-height formula-only blocks (\gdef macro paragraphs) — see WHERE above. */
-.prose p:has(> .katex:only-child > .katex-html:empty),
-.prose .katex-display:has(> .katex-html:empty) {
+.prose.lazy-layout p:has(> .katex:only-child > .katex-html:empty),
+.prose.lazy-layout .katex-display:has(> .katex-html:empty) {
   content-visibility: visible;
 }
 
 @media print {
-  .prose > *,
-  .prose > * > * {
+  .prose.lazy-layout > *,
+  .prose.lazy-layout > * > * {
     content-visibility: visible;
   }
 }
